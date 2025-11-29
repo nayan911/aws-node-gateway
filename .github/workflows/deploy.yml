@@ -47,12 +47,21 @@ jobs:
           ls -la
           cat private-ec2
 
-    - name: SSH into private ec2
+    - name: SSH into Bastion and then Private EC2
       uses: appleboy/ssh-action@v0.1.6
       with:
-        host: ${{ secrets.PRIVATE_EC2_IP }}
+        host: ${{ secrets.BASTION_IP }}
         username: ec2-user
-        key: private-ec2
+        key: ${{ secrets.BASTION_KEY }}
         script: |
-          echo "Logged into private ec2 successfully!"
-          docker ps
+          echo "➡ Logged into Bastion"
+          ls -la   # You asked for this
+          cat private-ec2  # You requested
+          chmod 400 private-ec2
+
+          echo "➡ Now connecting to Private EC2..."
+          ssh -i private-ec2 -o StrictHostKeyChecking=no ec2-user@10.0.3.169 << 'EOF'
+            echo "🎉 Inside Private EC2!"
+            hostname
+            docker ps
+          EOF
