@@ -65,3 +65,64 @@ jobs:
             hostname
             docker ps
           EOF
+
+    - name: SSH into Bastion and then Private EC2
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.BASTION_IP }}
+        username: ec2-user
+        key: ${{ secrets.BASTION_KEY }}
+        script: |
+          echo "➡ Logged into Bastion"
+          ls -la
+          chmod 400 private-ec2  # protect key
+
+          echo "➡ Connecting to Private EC2..."
+          ssh -i private-ec2 -o StrictHostKeyChecking=no ec2-user@10.0.3.169 << 'EOF'
+            echo "🎉 Inside Private EC2!"
+
+            echo "🚫 Stopping Old Containers"
+            docker stop service-orders service-products service-users || true
+            docker rm service-orders service-products service-users || true
+
+            echo "📥 Pulling Latest Images"
+            docker pull 324037317595.dkr.ecr.eu-north-1.amazonaws.com/service-users:latest
+            docker pull 324037317595.dkr.ecr.eu-north-1.amazonaws.com/service-orders:latest
+            docker pull 324037317595.dkr.ecr.eu-north-1.amazonaws.com/service-products:latest
+
+            echo "🚀 Starting Services (latest image)"
+
+            docker run -d \
+              --name service-users \
+              -p 3001:3001 \
+              -e DB_HOST=database-2.c7osg4ocqvq4.eu-north-1.rds.amazonaws.com \
+              -e DB_USER=admin \
+              -e DB_PASSWORD=rootpass \
+              -e DB_NAME=microdb \
+              --restart unless-stopped \
+              324037317595.dkr.ecr.eu-north-1.amazonaws.com/service-users:latest
+
+            docker run -d \
+              --name service-products \
+              -p 3002:3002 \
+              -e DB_HOST=database-2.c7osg4ocqvq4.eu-north-1.rds.amazonaws.com \
+              -e DB_USER=admin \
+              -e DB_PASSWORD=rootpass \
+              -e DB_NAME=microdb \
+              --restart unless-stopped \
+              324037317595.dkr.ecr.eu-north-1.amazonaws.com/service-products:latest
+
+            docker run -d \
+              --name service-orders \
+              -p 3003:3003 \
+              -e DB_HOST=database-2.c7osg4ocqvq4.eu-north-1.rds.amazonaws.com \
+              -e DB_USER=admin \
+              -e DB_PASSWORD=rootpass \
+              -e DB_NAME=microdb \
+              --restart unless-stopped \
+              324037317595.dkr.ecr.eu-north-1.amazonaws.com/service-orders:latest
+
+            echo "✅ Deployment Successful!"
+            docker ps
+          EOF
+
