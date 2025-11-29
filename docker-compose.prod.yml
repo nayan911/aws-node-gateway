@@ -1,0 +1,46 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: microdb
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  service-users:
+    build: ./service-users
+    container_name: service-users
+    env_file:
+      - ./service-users/.env
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mysql
+
+  service-products:
+    build: ./service-products
+    container_name: service-products
+    env_file:
+      - ./service-products/.env
+    ports:
+      - "3002:3002"
+    depends_on:
+      - mysql
+
+  service-orders:
+    build: ./service-orders
+    container_name: service-orders
+    env_file:
+      - ./service-orders/.env
+    ports:
+      - "3003:3003"
+    depends_on:
+      - mysql
+
+networks:
+  default:
+    driver: bridge
