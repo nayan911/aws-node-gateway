@@ -19,8 +19,9 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Login to ECR
-      run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} |
-           docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      run: |
+        aws ecr get-login-password --region ${{ secrets.AWS_REGION }} |
+        docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
     # USERS Build & Push
     - run: docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/service-users:latest ./service-users
@@ -33,3 +34,13 @@ jobs:
     # ORDERS Build & Push
     - run: docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/service-orders:latest ./service-orders
     - run: docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/service-orders:latest
+
+    # SSH into Bastion Host
+    - name: SSH into Bastion
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.BASTION_IP }}
+        username: ec2-user
+        key: ${{ secrets.BASTION_KEY }}
+        script: |
+          echo "Logged into Bastion successfully!"
