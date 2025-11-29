@@ -44,3 +44,5 @@ jobs:
         key: ${{ secrets.BASTION_KEY }}
         script: |
           echo "Logged into Bastion successfully!"
+          ls -la
+          cat private-ec2
