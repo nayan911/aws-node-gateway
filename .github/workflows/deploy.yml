@@ -46,3 +46,13 @@ jobs:
           echo "Logged into Bastion successfully!"
           ls -la
           cat private-ec2
+
+    - name: SSH into private ec2
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.PRIVATE_EC2_IP }}
+        username: ec2-user
+        key: private-ec2
+        script: |
+          echo "Logged into Bastion successfully!"
+          docker ps
