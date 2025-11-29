@@ -54,5 +54,5 @@ jobs:
         username: ec2-user
         key: private-ec2
         script: |
-          echo "Logged into Bastion successfully!"
+          echo "Logged into private ec2 successfully!"
           docker ps
